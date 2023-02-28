@@ -1,6 +1,6 @@
-import { InputTypeTree, Rest } from '../../src/rest/rest';
-import * as dotenv from 'dotenv';
-dotenv.config();
+// import { InputTypeTree, Rest } from '../../src/rest/rest';
+// import * as dotenv from 'dotenv';
+// dotenv.config();
 
 // interface Lic {
 //   codigoReferencia: string;
