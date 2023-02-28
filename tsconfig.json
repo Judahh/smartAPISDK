@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "target": "ES2022",
+    "module": "commonjs",
+    "declaration": true,
+    "declarationMap": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "outDir": "./dist",
+    "removeComments": false,
+    "strict": true,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "typeRoots": ["./types", "../node_modules/@types", "node_modules/@types"],
+    "types": ["node", "jest"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["../api/*", "../api", "../api/**/*", "**/*", "*"],
+  "exclude": ["node_modules", "**/*.spec.ts", "**/*.test.ts", "dist"]
+}

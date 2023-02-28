@@ -1,0 +1,18 @@
+{
+    "editor.tabSize": 2,
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+    "eslint.validate": [
+        "javascript"
+    ],
+    "editor.formatOnPaste": false, // required
+    "editor.formatOnType": false, // required
+    "editor.formatOnSave": true, // optional
+    "editor.formatOnSaveMode": "file", // required to format on save
+    "files.autoSave": "onFocusChange",
+    "codemetrics.basics.CodeLensHiddenUnder": 5,
+    "codemetrics.basics.ComplexityLevelExtreme": 30,
+    "codemetrics.basics.ComplexityLevelHigh": 15,
+    "codemetrics.basics.ComplexityLevelNormal": 10 // optional but recommended
+}

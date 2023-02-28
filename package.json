@@ -1,0 +1,62 @@
+{
+  "name": "smart-api-sdk",
+  "productName": "smartAPISDK",
+  "version": "0.0.8",
+  "private": false,
+  "description": "Smart API SDK",
+  "main": "dist/src/index.js",
+  "keywords": [
+    "nodejs",
+    "typescript",
+    "javascript"
+  ],
+  "repository": {
+    "type": "git"
+  },
+  "license": "MIT",
+  "config": {
+    "jest": "--coverage --passWithNoTests --ci --verbose --forceExit --detectOpenHandles --colors",
+    "integration_config": "-i -c integration.config.json",
+    "unit_coverall": "tests/unit/coverage/lcov.info",
+    "integration_coverall": "tests/integration/coverage/lcov.info",
+    "path_dist": "dist",
+    "path_source": "src",
+    "main": "dist/src/index.js"
+  },
+  "scripts": {
+    "tsc": "tsc",
+    "tsc:w": "tsc -w",
+    "build": "rm -rf dist/ && tsc",
+    "test": "jest $npm_package_config_jest",
+    "integration": "jest $npm_package_config_integration_config $npm_package_config_jest",
+    "test:coveralls": "jest $npm_package_config_jest && coveralls < $npm_package_config_unit_coverall && rm -rf ./tests/unit/coverage/coverage",
+    "integration:coveralls": "jest $npm_package_config_integration_config $npm_package_config_jest && coveralls < $npm_package_config_integration_coverall && rm -rf ./tests/integration/coverage/coverage"
+  },
+  "dependencies": {
+    "axios": "latest",
+    "@midware/mauth": "latest"
+  },
+  "devDependencies": {
+    "@babel/preset-env": "latest",
+    "@types/jest": "latest",
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "latest",
+    "@typescript-eslint/parser": "latest",
+    "babel-jest": "latest",
+    "babel-plugin-root-import": "latest",
+    "babel-plugin-styled-components": "latest",
+    "dotenv": "latest",
+    "eslint": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-plugin-filenames": "latest",
+    "eslint-plugin-import": "latest",
+    "eslint-plugin-jsdoc": "latest",
+    "eslint-plugin-prettier": "latest",
+    "jest": "latest",
+    "jest-cli": "latest",
+    "prettier": "latest",
+    "ts-jest": "latest",
+    "ts-node": "latest",
+    "typescript": "latest"
+  }
+}

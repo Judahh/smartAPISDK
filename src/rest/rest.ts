@@ -1,0 +1,233 @@
+import { JsonWebToken } from '@midware/mauth';
+import { request } from './request';
+
+type PathTree = {
+  [key: string]: string | PathTree;
+};
+
+// type TypeTree<P extends PathTree> = {
+//   [K in keyof P]: P[K] extends string
+//     ? { input: any; output: any }
+//     : P[K] extends PathTree
+//     ? TypeTree<P[K]>
+//     : never;
+// };
+
+// const samplePathTree: PathTree = {
+//   bidding: {
+//     create: 'post',
+//     read: 'get',
+//     update: 'put',
+//     delete: 'delete',
+//     item: {
+//       create: 'post',
+//       read: 'get',
+//       update: 'put',
+//       delete: 'delete',
+//     },
+//   },
+//   schedule: {
+//     create: 'post',
+//     read: 'get',
+//     update: 'put',
+//     delete: 'delete',
+//   },
+// };
+
+// type BiddingInput = any;
+// type BiddingOutput = any;
+// type ScheduleInput = any;
+// type ScheduleOutput = any;
+// type ItemInput = any;
+// type ItemOutput = any;
+
+// interface SampleTypeTree extends TypeTree<PathTree> {
+//   bidding: {
+//     create: { input: BiddingInput; output: BiddingOutput };
+//     read: { input: BiddingInput; output: BiddingOutput };
+//     update: { input: BiddingInput; output: BiddingOutput };
+//     delete: { input: BiddingInput; output: BiddingOutput };
+//     item: {
+//       create: { input: ItemInput; output: ItemOutput };
+//       read: { input: ItemInput; output: ItemOutput };
+//       update: { input: ItemInput; output: ItemOutput };
+//       delete: { input: ItemInput; output: ItemOutput };
+//     };
+//   };
+//   schedule: {
+//     create: { input: ScheduleInput; output: ScheduleOutput };
+//     read: { input: ScheduleInput; output: ScheduleOutput };
+//     update: { input: ScheduleInput; output: ScheduleOutput };
+//     delete: { input: ScheduleInput; output: ScheduleOutput };
+//   };
+// }
+
+class Rest /*<P extends PathTree, T extends TypeTree<P>>*/ {
+  private address: string;
+  private token?: string;
+  private clearBaseURL?: boolean;
+  private root: string;
+  private pathTree: PathTree;
+  private noCache?: boolean;
+  private replaceHeaders?;
+  private requestTree: any;
+  private needsToken?: boolean;
+  private timeoutThreshold = 1000;
+  private autoRefreshToken: boolean;
+
+  constructor(
+    address = 'localhost',
+    root = 'api',
+    pathTree?: PathTree,
+    clearBaseURL?: boolean,
+    noCache?: boolean,
+    replaceHeaders?,
+    needsToken = false,
+    timeoutThreshold?: number,
+    autoRefreshToken = false
+  ) {
+    this.address = address;
+    this.clearBaseURL = clearBaseURL;
+    this.root = root;
+    this.pathTree = pathTree || ({} as PathTree);
+    this.noCache = noCache;
+    this.replaceHeaders = replaceHeaders;
+    this.requestTree = this.generateRequests(this.pathTree, this.root);
+    this.needsToken = needsToken;
+    this.timeoutThreshold = timeoutThreshold || this.timeoutThreshold;
+    this.autoRefreshToken = autoRefreshToken;
+  }
+
+  private getRequest<Query = unknown, Input = Query, Output = Input>(
+    method: string,
+    path: string
+  ) {
+    const newRequest = async (
+      query?: Query,
+      data?: Input,
+      page?: number,
+      pageSize?: number,
+      noCache?: boolean,
+      replaceHeaders?
+    ) =>
+      await request<Query, Input, Output>(
+        this.address,
+        method,
+        path,
+        this.needsToken ? await this.getToken() : undefined,
+        query,
+        data,
+        this.clearBaseURL,
+        page,
+        pageSize,
+        noCache || this.noCache,
+        replaceHeaders || this.replaceHeaders
+      );
+    return newRequest;
+  }
+
+  private generateRequests(pathTree: string | PathTree, root: string) {
+    let requests = {};
+    if (typeof pathTree === 'string') {
+      requests = this.getRequest(pathTree, root);
+    } else
+      for (const key in pathTree) {
+        if (Object.prototype.hasOwnProperty.call(pathTree, key)) {
+          const element = pathTree[key];
+          requests[key] = this.generateRequests(
+            element,
+            typeof element === 'string' ? root : root + '/' + key
+          );
+        }
+      }
+    return requests;
+  }
+
+  private async refreshToken(
+    request?: (lastToken?: string) => Promise<
+      | {
+          data?: { accessToken?: string; token?: string };
+          accessToken?: string;
+          token?: string;
+        }
+      | string
+      | undefined
+    >
+  ) {
+    const lastToken = this.token;
+    this.token = undefined;
+    if (this.autoRefreshToken)
+      this.token = await this.getToken(request, lastToken);
+    return this.token;
+  }
+
+  async getToken(
+    request?: (lastToken?: string) => Promise<
+      | {
+          data?: { accessToken?: string; token?: string };
+          accessToken?: string;
+          token?: string;
+        }
+      | string
+      | undefined
+    >,
+    lastToken?: string
+  ) {
+    const now = Date.now() / 1000;
+    if (!this.token) {
+      if (request) {
+        const req = await request(lastToken);
+        this.token = (
+          typeof req === 'string'
+            ? req
+            : req?.data?.token ||
+              req?.data?.accessToken ||
+              req?.data ||
+              req?.token ||
+              req?.accessToken ||
+              req
+        ) as string | undefined;
+      } else if (process.env.JWT_PRIVATE_KEY) {
+        this.token = await JsonWebToken.getInstance().sign({
+          id: '000000000000000000000000',
+          givenName: process.env.SERVICE_NAME,
+          familyName: process.env.INSTANCE,
+          identification: process.env.SERVICE_NAME,
+          type: 'API',
+          permissions: {
+            auth: {
+              all: ['all'],
+            },
+            all: {
+              all: ['all'],
+            },
+          },
+          instances: ['all'],
+        });
+      }
+    }
+    if (this.token) {
+      const expiresIn = (await JsonWebToken.getInstance().verify(this.token))
+        .exp;
+      if (expiresIn) {
+        const rF = this.refreshToken.bind(this);
+        const tF = async () => {
+          const req = await rF(request);
+          this.token = req;
+        };
+        setTimeout(
+          tF.bind(this),
+          (expiresIn - now) * 1000 - this.timeoutThreshold
+        );
+      }
+    }
+    return this.token;
+  }
+
+  getRequestTree() {
+    return this.requestTree;
+  }
+}
+
+export { Rest };
+export type { PathTree };

@@ -1,0 +1,15 @@
+node_modules
+.next
+.js
+!.config.js
+.DS_Store
+.env
+out
+dist
+public/sw.js
+public/sw.js.map
+public/workbox-*.js
+public/workbox-*.js.map
+test/*/coverage
+*.log
+VSWorkspaceState.json

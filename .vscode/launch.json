@@ -1,0 +1,41 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch INDEX Program",
+      "preLaunchTask": "npm: build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run-script",
+        "startIndex"
+      ]
+    },
+    // Launch via NPM
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch via NPM",
+      "preLaunchTask": "npm: build",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run-script",
+        "start"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch via NPM (dev)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run-script",
+        "dev"
+      ]
+    },
+  ]
+}
