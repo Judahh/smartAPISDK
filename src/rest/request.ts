@@ -224,6 +224,11 @@ const request = async <Query = any, Input = Query, Output = Input>(
 
     const received = await axios[method](url, param2, param3);
 
+    received.data =
+      typeof received.data == 'string' && received.data?.trim?.() == ''
+        ? undefined
+        : received.data;
+
     return received as AxiosResponse<Output>;
   } catch (error: any) {
     await reduceError(error, url, method, async () => {
