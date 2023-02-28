@@ -1,17 +1,35 @@
 import { JsonWebToken } from '@midware/mauth';
+import { AxiosResponse } from 'axios';
 import { request } from './request';
 
 type PathTree = {
   [key: string]: string | PathTree;
 };
 
-// type TypeTree<P extends PathTree> = {
-//   [K in keyof P]: P[K] extends string
-//     ? { input: any; output: any }
-//     : P[K] extends PathTree
-//     ? TypeTree<P[K]>
-//     : never;
-// };
+type InputType = {
+  filter: unknown;
+  input: unknown;
+  output: unknown;
+};
+
+type InputTypeTree = {
+  [key: string]: InputType | InputTypeTree;
+};
+
+type TypeTree<T extends InputTypeTree> = {
+  [K in keyof T]: T[K] extends InputType
+    ? (
+        query?: Partial<T[K]['filter']>,
+        data?: T[K]['input'],
+        page?: number,
+        pageSize?: number,
+        noCache?: boolean,
+        replaceHeaders?
+      ) => Promise<AxiosResponse<T[K]['output']>> | undefined
+    : T[K] extends InputTypeTree
+    ? TypeTree<T[K]>
+    : never;
+};
 
 // const samplePathTree: PathTree = {
 //   bidding: {
@@ -62,7 +80,7 @@ type PathTree = {
 //   };
 // }
 
-class Rest /*<P extends PathTree, T extends TypeTree<P>>*/ {
+class Rest<T extends InputTypeTree> {
   private address: string;
   private token?: string;
   private clearBaseURL?: boolean;
@@ -70,7 +88,7 @@ class Rest /*<P extends PathTree, T extends TypeTree<P>>*/ {
   private pathTree: PathTree;
   private noCache?: boolean;
   private replaceHeaders?;
-  private requestTree: any;
+  private requestTree: TypeTree<T>;
   private needsToken?: boolean;
   private timeoutThreshold = 1000;
   private autoRefreshToken: boolean;
@@ -126,7 +144,10 @@ class Rest /*<P extends PathTree, T extends TypeTree<P>>*/ {
     return newRequest;
   }
 
-  private generateRequests(pathTree: string | PathTree, root: string) {
+  private generateRequests(
+    pathTree: string | PathTree,
+    root: string
+  ): TypeTree<T> {
     let requests = {};
     if (typeof pathTree === 'string') {
       requests = this.getRequest(pathTree, root);
@@ -140,7 +161,7 @@ class Rest /*<P extends PathTree, T extends TypeTree<P>>*/ {
           );
         }
       }
-    return requests;
+    return requests as TypeTree<T>;
   }
 
   private async refreshToken(
@@ -224,10 +245,10 @@ class Rest /*<P extends PathTree, T extends TypeTree<P>>*/ {
     return this.token;
   }
 
-  getRequestTree() {
+  getRequestTree(): TypeTree<T> {
     return this.requestTree;
   }
 }
 
 export { Rest };
-export type { PathTree };
+export type { PathTree, InputTypeTree, TypeTree };
