@@ -1,4 +1,4 @@
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import RequestError from './requestError';
 
 const improveErrorMessage = (error: any, url?, method?) => {
@@ -261,7 +261,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
     // console.log('Param2', param2);
     // console.log('Param3', param3);
 
-    let received;
+    let received: AxiosResponse<Output>;
     if (urlParams) {
       //use fetch
       const { params } = config;
@@ -273,14 +273,16 @@ const request = async <Query = any, Input = Query, Output = Input>(
         body: JSON.stringify(data),
       });
       f['data'] = (await f.json()) || f.body;
+      received = f as unknown as AxiosResponse<Output>;
+      received.config = config as InternalAxiosRequestConfig;
     } else {
       received = await axios[method](url, param2, param3);
     }
 
-    received.data =
-      typeof received.data == 'string' && received.data?.trim?.() == ''
-        ? undefined
-        : received.data;
+    received.data = (typeof received.data == 'string' &&
+    received.data?.trim?.() == ''
+      ? undefined
+      : received.data) as unknown as Output;
 
     return received as AxiosResponse<Output>;
   } catch (error: any) {
