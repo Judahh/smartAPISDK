@@ -194,17 +194,22 @@ const splitUrlParams = <T = object>(query?: T) => {
       }
     }
   }
+  if (Object.keys(urlParams).length === 0) return undefined;
   return urlParams;
 };
 
-const addParamsToUrl = (url: string, urlParams: { [key: string]: unknown }) => {
+const addParamsToUrl = (
+  url: string,
+  urlParams?: { [key: string]: unknown }
+) => {
+  if (!urlParams) return url;
   for (const key in urlParams) {
     if (Object.hasOwnProperty.call(urlParams, key)) {
       const element = urlParams[key];
       // append to url as query param ?key=value for the first or &key=value for the rest
       url += url.includes('?') ? '&' : '?';
       if (Array.isArray(element)) {
-        const array = element as string[];
+        const array: string[] = [];
         element.forEach((value) => {
           array.push(`${key}[]=${value}`);
         });
@@ -256,7 +261,21 @@ const request = async <Query = any, Input = Query, Output = Input>(
     // console.log('Param2', param2);
     // console.log('Param3', param3);
 
-    const received = await axios[method](url, param2, param3);
+    let received;
+    if (urlParams) {
+      //use fetch
+      const { params } = config;
+      delete config.params;
+      url += (url.includes('?') ? '&' : '?') + new URLSearchParams(params);
+      const f = await fetch(url, {
+        ...config,
+        method: method.toUpperCase(),
+        body: JSON.stringify(data),
+      });
+      f['data'] = (await f.json()) || f.body;
+    } else {
+      received = await axios[method](url, param2, param3);
+    }
 
     received.data =
       typeof received.data == 'string' && received.data?.trim?.() == ''
