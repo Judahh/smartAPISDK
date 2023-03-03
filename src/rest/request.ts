@@ -183,6 +183,39 @@ const generateParam3 = (clearBaseURL = false, config) => {
   return param3;
 };
 
+const splitUrlParams = <T = object>(query?: T) => {
+  const urlParams: { [key: string]: unknown } = {};
+  for (const key in query) {
+    if (Object.hasOwnProperty.call(query, key)) {
+      const element = query[key];
+      if (key.includes('.$')) {
+        urlParams[key] = element;
+        delete query[key];
+      }
+    }
+  }
+  return urlParams;
+};
+
+const addParamsToUrl = (url: string, urlParams: { [key: string]: unknown }) => {
+  for (const key in urlParams) {
+    if (Object.hasOwnProperty.call(urlParams, key)) {
+      const element = urlParams[key];
+      // append to url as query param ?key=value for the first or &key=value for the rest
+      url += url.includes('?') ? '&' : '?';
+      if (Array.isArray(element)) {
+        const array = element as string[];
+        element.forEach((value) => {
+          array.push(`${key}[]=${value}`);
+        });
+        url += array.join('&');
+        continue;
+      } else url += `${key}=${element}`;
+    }
+  }
+  return url;
+};
+
 const request = async <Query = any, Input = Query, Output = Input>(
   address = 'localhost',
   method = 'get',
@@ -200,7 +233,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
 
   try {
     const protocol = getProtocol(url);
-
+    const urlParams = splitUrlParams<Query>(query);
     const config = generateConfig(
       method,
       token,
@@ -217,6 +250,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
     const param3 = generateParam3(clearBaseURL, config);
 
     url = protocol + url;
+    url = addParamsToUrl(url, urlParams);
     // console.log('URL', url);
     // console.log('Method', method);
     // console.log('Param2', param2);
