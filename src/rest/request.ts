@@ -254,6 +254,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
 
     const param3 = generateParam3(clearBaseURL, config);
 
+    url = url.replace(protocol, '').replace(protocol.replace('s', ''), '');
     url = protocol + url;
     url = addParamsToUrl(url, urlParams);
     // console.log('URL', url);
