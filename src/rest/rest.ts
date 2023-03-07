@@ -102,9 +102,9 @@ class Rest<T extends InputTypeTree> {
       clearBaseURL?: boolean;
       noCache?: boolean;
       replaceHeaders?;
-      needsToken: boolean;
+      needsToken?: boolean;
       timeoutThreshold?: number;
-      autoRefreshToken: boolean;
+      autoRefreshToken?: boolean;
       baseQuery?: unknown;
       apiToken?: string;
     }
@@ -142,7 +142,7 @@ class Rest<T extends InputTypeTree> {
         this.address,
         method,
         path,
-        this.needsToken ? await this.getToken() : undefined,
+        this.needsToken || this.token ? await this.getToken() : undefined,
         newQuery,
         data,
         this.clearBaseURL,

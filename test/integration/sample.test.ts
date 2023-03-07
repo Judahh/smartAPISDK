@@ -1,4 +1,4 @@
-import { InputTypeTree, Rest, TypeTree } from '../../src/rest/rest';
+// import { InputTypeTree, Rest, TypeTree } from '../../src/rest/rest';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -129,42 +129,49 @@ test('sample', async () => {
   // }
 });
 
-const tree7Pace = {
-  rest: {
-    workLogs: {
-      create: 'post',
-      read: 'get',
-    },
-  },
-};
+// const tree7Pace = {
+//   rest: {
+//     workLogs: {
+//       create: 'post',
+//       read: 'get',
+//     },
+//   },
+// };
 
-interface TypeTree7Pace extends InputTypeTree {
-  rest: {
-    workLogs: {
-      create: {
-        filter: undefined;
-        input: any | any[];
-        output: any | any[] | undefined;
-      };
-      read: {
-        filter: any;
-        input: undefined;
-        output: any | any[] | undefined;
-      };
-    };
-  };
-}
+// interface TypeTree7Pace extends InputTypeTree {
+//   rest: {
+//     workLogs: {
+//       create: {
+//         filter: undefined;
+//         input: any | any[];
+//         output: any | any[] | undefined;
+//       };
+//       read: {
+//         filter: any;
+//         input: undefined;
+//         output: any | any[] | undefined;
+//       };
+//     };
+//   };
+// }
 
-test('sample 7Pace', async () => {
-  const rest7Pace: Rest<TypeTree7Pace> = new Rest<TypeTree7Pace>(
-    'https://app.7pace.com',
-    'api',
-    tree7Pace
-  );
-  const requestTree7Pace: TypeTree<TypeTree7Pace> = rest7Pace.getRequestTree();
-  const licitacao = await requestTree7Pace.rest.workLogs.read();
-  if (licitacao) {
-    console.log(licitacao.headers);
-    console.log(licitacao.data);
-  }
-});
+// test('sample 7Pace', async () => {
+//   const rest7Pace: Rest<TypeTree7Pace> = new Rest<TypeTree7Pace>(
+//     'https://app.7pace.com',
+//     'api',
+//     tree7Pace,
+//     {
+//       apiToken: 'BLA',
+//       baseQuery: {
+//         client_id: 'BLA',
+//         'api-version': '5.0-beta',
+//       },
+//     }
+//   );
+//   const requestTree7Pace: TypeTree<TypeTree7Pace> = rest7Pace.getRequestTree();
+//   const sevenPace = await requestTree7Pace.rest.workLogs.read();
+//   if (sevenPace) {
+//     console.log(sevenPace.headers);
+//     console.log(sevenPace.data);
+//   }
+// });
