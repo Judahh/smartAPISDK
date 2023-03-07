@@ -257,11 +257,11 @@ const request = async <Query = any, Input = Query, Output = Input>(
     url = url.replace(protocol, '').replace(protocol.replace('s', ''), '');
     url = protocol + url;
     url = addParamsToUrl(url, urlParams);
-    console.log('URL', url);
-    console.log('token', token);
-    console.log('Method', method);
-    console.log('Param2', param2);
-    console.log('Param3', param3);
+    // console.log('URL', url);
+    // console.log('token', token);
+    // console.log('Method', method);
+    // console.log('Param2', param2);
+    // console.log('Param3', param3);
 
     let received: AxiosResponse<Output>;
     if (urlParams) {
