@@ -1,6 +1,6 @@
-// import { InputTypeTree, Rest } from '../../src/rest/rest';
-// import * as dotenv from 'dotenv';
-// dotenv.config();
+import { InputTypeTree, Rest, TypeTree } from '../../src/rest/rest';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 // interface Lic {
 //   codigoReferencia: string;
@@ -127,4 +127,44 @@ test('sample', async () => {
   //   console.log(licitacao.headers);
   //   console.log(licitacao.data);
   // }
+});
+
+const tree7Pace = {
+  rest: {
+    workLogs: {
+      create: 'post',
+      read: 'get',
+    },
+  },
+};
+
+interface TypeTree7Pace extends InputTypeTree {
+  rest: {
+    workLogs: {
+      create: {
+        filter: undefined;
+        input: any | any[];
+        output: any | any[] | undefined;
+      };
+      read: {
+        filter: any;
+        input: undefined;
+        output: any | any[] | undefined;
+      };
+    };
+  };
+}
+
+test('sample 7Pace', async () => {
+  const rest7Pace: Rest<TypeTree7Pace> = new Rest<TypeTree7Pace>(
+    'https://app.7pace.com',
+    'api',
+    tree7Pace
+  );
+  const requestTree7Pace: TypeTree<TypeTree7Pace> = rest7Pace.getRequestTree();
+  const licitacao = await requestTree7Pace.rest.workLogs.read();
+  if (licitacao) {
+    console.log(licitacao.headers);
+    console.log(licitacao.data);
+  }
 });

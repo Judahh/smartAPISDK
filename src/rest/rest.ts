@@ -92,28 +92,35 @@ class Rest<T extends InputTypeTree> {
   private needsToken?: boolean;
   private timeoutThreshold = 1000;
   private autoRefreshToken: boolean;
+  private baseQuery?: unknown;
 
   constructor(
     address = 'localhost',
     root = 'api',
     pathTree?: PathTree,
-    clearBaseURL?: boolean,
-    noCache?: boolean,
-    replaceHeaders?,
-    needsToken = false,
-    timeoutThreshold?: number,
-    autoRefreshToken = false
+    options?: {
+      clearBaseURL?: boolean;
+      noCache?: boolean;
+      replaceHeaders?;
+      needsToken: boolean;
+      timeoutThreshold?: number;
+      autoRefreshToken: boolean;
+      baseQuery?: unknown;
+      apiToken?: string;
+    }
   ) {
     this.address = address;
-    this.clearBaseURL = clearBaseURL;
+    this.clearBaseURL = options?.clearBaseURL;
     this.root = root;
     this.pathTree = pathTree || ({} as PathTree);
-    this.noCache = noCache;
-    this.replaceHeaders = replaceHeaders;
+    this.noCache = options?.noCache || false;
+    this.replaceHeaders = options?.replaceHeaders || false;
     this.requestTree = this.generateRequests(this.pathTree, this.root);
-    this.needsToken = needsToken;
-    this.timeoutThreshold = timeoutThreshold || this.timeoutThreshold;
-    this.autoRefreshToken = autoRefreshToken;
+    this.needsToken = options?.needsToken || false;
+    this.timeoutThreshold = options?.timeoutThreshold || this.timeoutThreshold;
+    this.autoRefreshToken = options?.autoRefreshToken || false;
+    this.token = options?.apiToken;
+    this.baseQuery = options?.baseQuery || undefined;
   }
 
   private getRequest<Query = unknown, Input = Query, Output = Input>(
@@ -127,13 +134,16 @@ class Rest<T extends InputTypeTree> {
       pageSize?: number,
       noCache?: boolean,
       replaceHeaders?
-    ) =>
-      await request<Query, Input, Output>(
+    ) => {
+      let newQuery: Query | undefined = query ? query : ({} as Query);
+      newQuery = this.baseQuery ? { ...this.baseQuery, ...newQuery } : newQuery;
+      if (newQuery && Object.keys(newQuery).length === 0) newQuery = undefined;
+      return await request<Query, Input, Output>(
         this.address,
         method,
         path,
         this.needsToken ? await this.getToken() : undefined,
-        query,
+        newQuery,
         data,
         this.clearBaseURL,
         page,
@@ -141,6 +151,7 @@ class Rest<T extends InputTypeTree> {
         noCache || this.noCache,
         replaceHeaders || this.replaceHeaders
       );
+    };
     return newRequest;
   }
 
@@ -227,7 +238,7 @@ class Rest<T extends InputTypeTree> {
         });
       }
     }
-    if (this.token) {
+    if (this.token && this.autoRefreshToken) {
       const expiresIn = (await JsonWebToken.getInstance().verify(this.token))
         .exp;
       if (expiresIn) {
@@ -242,6 +253,7 @@ class Rest<T extends InputTypeTree> {
         );
       }
     }
+
     return this.token;
   }
 
