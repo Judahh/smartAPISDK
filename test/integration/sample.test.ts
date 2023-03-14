@@ -196,43 +196,43 @@ test('sample PNCP', async () => {
 
   const companies = (await pncpRequestTree?.orgaos.read())?.data;
 
-  const auxProposals = (
-    await pncpRequestTree?.orgaos
-      .cnpj('07093503000106')
-      .compras.year(2023)
-      .sequential(1)
-      .itens.number(1)
-      .resultados.read()
-  )?.data;
+  // const auxProposals = (
+  //   await pncpRequestTree?.orgaos
+  //     .cnpj('07093503000106')
+  //     .compras.year(2023)
+  //     .sequential(1)
+  //     .itens.number(1)
+  //     .resultados.read()
+  // )?.data;
 
-  const response = (
-    await pncpRequestTree?.orgaos
-      .cnpj('07093503000106')
-      .compras.year(2023)
-      .sequential(1)
-      .read()
-  )?.data;
+  // const response = (
+  //   await pncpRequestTree?.orgaos
+  //     .cnpj('07093503000106')
+  //     .compras.year(2023)
+  //     .sequential(1)
+  //     .read()
+  // )?.data;
 
-  const arquivos = (
-    await pncpRequestTree.orgaos
-      .cnpj('07093503000106')
-      .compras.year(2023)
-      .sequential(1)
-      .arquivos.read()
-  )?.data;
+  // const arquivos = (
+  //   await pncpRequestTree.orgaos
+  //     .cnpj('07093503000106')
+  //     .compras.year(2023)
+  //     .sequential(1)
+  //     .arquivos.read()
+  // )?.data;
 
   console.log('companies', companies);
-  console.log('auxProposals', auxProposals);
-  console.log('response', response);
-  console.log('arquivos', arquivos);
+  // console.log('auxProposals', auxProposals);
+  // console.log('response', response);
+  // console.log('arquivos', arquivos);
 
-  const auxItems = (
-    await pncpRequestTree?.orgaos
-      .cnpj('07093503000106')
-      .compras.year(2023)
-      .sequential(1)
-      .itens.read()
-  )?.data;
+  // const auxItems = (
+  //   await pncpRequestTree?.orgaos
+  //     .cnpj('07093503000106')
+  //     .compras.year(2023)
+  //     .sequential(1)
+  //     .itens.read()
+  // )?.data;
 
-  console.log('auxItems', auxItems);
+  // console.log('auxItems', auxItems);
 });
