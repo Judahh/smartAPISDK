@@ -1,4 +1,4 @@
-// import { InputTypeTree, Rest, TypeTree } from '../../src/rest/rest';
+import { InputTypeTree, Rest, TypeTree } from '../../src/rest/rest';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -155,15 +155,17 @@ test('sample', async () => {
 //   };
 // }
 
+// const token = 'BLA';
+
 // test('sample 7Pace', async () => {
 //   const rest7Pace: Rest<TypeTree7Pace> = new Rest<TypeTree7Pace>(
 //     'https://app.7pace.com',
 //     'api',
 //     tree7Pace,
 //     {
-//       apiToken: 'BLA',
+//       apiToken: token,
 //       baseQuery: {
-//         client_id: 'BLA',
+//         client_id: token,
 //         'api-version': '5.0-beta',
 //       },
 //     }
@@ -173,5 +175,49 @@ test('sample', async () => {
 //   if (sevenPace) {
 //     console.log(sevenPace.headers);
 //     console.log(sevenPace.data);
+//   }
+// });
+
+// const treePNCP = {
+//   orgaos: () => ({
+//     compras: () => () => ({
+//       arquivos: {
+//         read: 'get',
+//       },
+//     }),
+//   }),
+// };
+
+// interface TypeTreePNCP extends InputTypeTree {
+//   orgaos: (cnpj: string) => {
+//     compras: (year: number) => (sequential: number) => {
+//       arquivos: {
+//         read: {
+//           filter: any;
+//           input: undefined;
+//           output: any | any[] | undefined;
+//         };
+//       };
+//     };
+//   };
+// }
+
+// test('sample PNCP', async () => {
+//   const restPNCP: Rest<TypeTreePNCP> = new Rest<TypeTreePNCP>(
+//     'https://pncp.gov.br',
+//     'api/pncp/v1',
+//     treePNCP
+//   );
+//   const requestTreePNCP: TypeTree<TypeTreePNCP> = restPNCP.getRequestTree();
+
+//   console.log(requestTreePNCP);
+
+//   const pncp = await requestTreePNCP
+//     .orgaos('07093503000106')
+//     .compras(2023)(1)
+//     .arquivos.read();
+//   if (pncp) {
+//     console.log('headers', await pncp.headers);
+//     console.log('data', await pncp.data);
 //   }
 // });
