@@ -1,4 +1,10 @@
-import { InputTypeTree, Rest, TypeTree } from '../../src/rest/rest';
+/* eslint-disable no-unexpected-multiline */
+import {
+  // InputTypeTree,
+  Rest,
+  TypeTree,
+} from '../../src/rest/rest';
+import { pncpTree, PNCPTypeTree } from './pncp';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
@@ -110,24 +116,24 @@ dotenv.config();
 //   },
 // };
 
-test('sample', async () => {
-  // const rest = new Rest<SampleTypeTree>(
-  //   'localhost:3000',
-  //   'api',
-  //   samplePathTree
-  // );
-  // const tree = rest.getRequestTree();
-  // const licitacao = await tree.licitacao.read(
-  //   { codigoReferencia: 'asd3asd' },
-  //   undefined,
-  //   0,
-  //   10
-  // );
-  // if (licitacao) {
-  //   console.log(licitacao.headers);
-  //   console.log(licitacao.data);
-  // }
-});
+// test('sample', async () => {
+//   const rest = new Rest<SampleTypeTree>(
+//     'localhost:3000',
+//     'api',
+//     samplePathTree
+//   );
+//   const tree = rest.getRequestTree();
+//   const licitacao = await tree.licitacao.read(
+//     { codigoReferencia: 'asd3asd' },
+//     undefined,
+//     0,
+//     10
+//   );
+//   if (licitacao) {
+//     console.log(licitacao.headers);
+//     console.log(licitacao.data);
+//   }
+// });
 
 // const tree7Pace = {
 //   rest: {
@@ -178,46 +184,55 @@ test('sample', async () => {
 //   }
 // });
 
-// const treePNCP = {
-//   orgaos: () => ({
-//     compras: () => () => ({
-//       arquivos: {
-//         read: 'get',
-//       },
-//     }),
-//   }),
-// };
+test('sample PNCP', async () => {
+  const pncp: Rest<PNCPTypeTree> = new Rest<PNCPTypeTree>(
+    'https://pncp.gov.br',
+    'api/pncp/v1',
+    pncpTree
+  );
+  const pncpRequestTree: TypeTree<PNCPTypeTree> = pncp.getRequestTree();
 
-// interface TypeTreePNCP extends InputTypeTree {
-//   orgaos: (cnpj: string) => {
-//     compras: (year: number) => (sequential: number) => {
-//       arquivos: {
-//         read: {
-//           filter: any;
-//           input: undefined;
-//           output: any | any[] | undefined;
-//         };
-//       };
-//     };
-//   };
-// }
+  // console.log(pncpRequestTree);
 
-// test('sample PNCP', async () => {
-//   const restPNCP: Rest<TypeTreePNCP> = new Rest<TypeTreePNCP>(
-//     'https://pncp.gov.br',
-//     'api/pncp/v1',
-//     treePNCP
-//   );
-//   const requestTreePNCP: TypeTree<TypeTreePNCP> = restPNCP.getRequestTree();
+  const companies = (await pncpRequestTree?.orgaos.read())?.data;
 
-//   console.log(requestTreePNCP);
+  const auxProposals = (
+    await pncpRequestTree?.orgaos
+      .cnpj('07093503000106')
+      .compras.year(2023)
+      .sequential(1)
+      .itens.number(1)
+      .resultados.read()
+  )?.data;
 
-//   const pncp = await requestTreePNCP
-//     .orgaos('07093503000106')
-//     .compras(2023)(1)
-//     .arquivos.read();
-//   if (pncp) {
-//     console.log('headers', await pncp.headers);
-//     console.log('data', await pncp.data);
-//   }
-// });
+  const response = (
+    await pncpRequestTree?.orgaos
+      .cnpj('07093503000106')
+      .compras.year(2023)
+      .sequential(1)
+      .read()
+  )?.data;
+
+  const arquivos = (
+    await pncpRequestTree.orgaos
+      .cnpj('07093503000106')
+      .compras.year(2023)
+      .sequential(1)
+      .arquivos.read()
+  )?.data;
+
+  console.log('companies', companies);
+  console.log('auxProposals', auxProposals);
+  console.log('response', response);
+  console.log('arquivos', arquivos);
+
+  const auxItems = (
+    await pncpRequestTree?.orgaos
+      .cnpj('07093503000106')
+      .compras.year(2023)
+      .sequential(1)
+      .itens.read()
+  )?.data;
+
+  console.log('auxItems', auxItems);
+});
