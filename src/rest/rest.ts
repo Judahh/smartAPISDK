@@ -182,7 +182,7 @@ class Rest<T extends InputTypeTree> {
     if (typeof pathTree === 'function') {
       const o = pathTree(0);
       requests = (e) =>
-        this.generateRequests(o, e != undefined ? root + '/' + e : root);
+        this.generateRequests(o, e != undefined ? root + '/' + e : root); //e != undefined ? root + '/' + e : root);
       // console.log('pathTree function', pathTree, root);
     } else if (typeof pathTree === 'string') {
       // console.log('pathTree string');
@@ -201,10 +201,15 @@ class Rest<T extends InputTypeTree> {
           //       typeof element === 'string' ? root : root + '/' + key
           //     );
           // } else {
-          requests[key] = this.generateRequests(
-            element,
-            typeof element === 'string' ? root : root + '/' + key
-          );
+          const newRoot =
+            typeof element === 'string' || typeof element === 'function'
+              ? root
+              : root + '/' + key;
+          // console.log('key', key);
+          // console.log('element', element);
+          // console.log('typeof element', typeof element);
+          // console.log('newRoot', newRoot);
+          requests[key] = this.generateRequests(element, newRoot);
           // }
         }
       }
