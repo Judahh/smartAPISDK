@@ -2,8 +2,10 @@ import { JsonWebToken } from '@midware/mauth';
 import { AxiosResponse } from 'axios';
 import { request } from './request';
 
+type PathTreeFunction = (key) => string | PathTree | PathTreeFunction;
+
 type PathTree = {
-  [key: string]: string | PathTree;
+  [key: string | number]: string | PathTree | PathTreeFunction;
 };
 
 type InputType = {
@@ -12,24 +14,40 @@ type InputType = {
   output: unknown;
 };
 
+type InputTypeTreeFunction = (
+  key
+) => InputType | InputTypeTree | InputTypeTreeFunction;
+
 type InputTypeTree = {
-  [key: string]: InputType | InputTypeTree;
+  [key: string]: InputType | InputTypeTree | InputTypeTreeFunction;
 };
 
-type TypeTree<T extends InputTypeTree> = {
+type TypeTreeFinalFunction<T extends InputType> = (
+  query?: Partial<T['filter']>,
+  data?: T['input'],
+  page?: number,
+  pageSize?: number,
+  noCache?: boolean,
+  replaceHeaders?
+) => Promise<AxiosResponse<T['output']>> | undefined;
+
+type TypeTree<T extends InputType | InputTypeTree | InputTypeTreeFunction> = {
   [K in keyof T]: T[K] extends InputType
-    ? (
-        query?: Partial<T[K]['filter']>,
-        data?: T[K]['input'],
-        page?: number,
-        pageSize?: number,
-        noCache?: boolean,
-        replaceHeaders?
-      ) => Promise<AxiosResponse<T[K]['output']>> | undefined
+    ? TypeTreeFinalFunction<T[K]>
+    : T[K] extends InputTypeTreeFunction
+    ? ReturnTypeTree<T[K]>
     : T[K] extends InputTypeTree
     ? TypeTree<T[K]>
     : never;
 };
+
+type ReturnTypeTree<T extends InputTypeTreeFunction> = (
+  key
+) => TypeTree<ReturnType<T>> extends InputTypeTreeFunction
+  ? ReturnTypeTree<TypeTree<ReturnType<T>>>
+  : ReturnType<T> extends InputTypeTreeFunction
+  ? ReturnTypeTree<ReturnType<T>>
+  : TypeTree<ReturnType<T>>;
 
 // const samplePathTree: PathTree = {
 //   bidding: {
@@ -156,22 +174,42 @@ class Rest<T extends InputTypeTree> {
   }
 
   private generateRequests(
-    pathTree: string | PathTree,
+    pathTree: string | PathTree | PathTreeFunction,
     root: string
   ): TypeTree<T> {
     let requests = {};
-    if (typeof pathTree === 'string') {
+    // console.log('generateRequests:', pathTree, root);
+    if (typeof pathTree === 'function') {
+      const o = pathTree(0);
+      requests = (e) =>
+        this.generateRequests(o, e != undefined ? root + '/' + e : root);
+      // console.log('pathTree function', pathTree, root);
+    } else if (typeof pathTree === 'string') {
+      // console.log('pathTree string');
       requests = this.getRequest(pathTree, root);
-    } else
+    } else {
       for (const key in pathTree) {
+        // console.log('key', key);
         if (Object.prototype.hasOwnProperty.call(pathTree, key)) {
           const element = pathTree[key];
+          // if key contains ${<name>} then it is a variable and should be replaced with the value of the variable
+          // const variable = key.match(/\${(.*)}/);
+          // if (variable) {
+          //   requests = (key) =>
+          //     this.generateRequests(
+          //       element,
+          //       typeof element === 'string' ? root : root + '/' + key
+          //     );
+          // } else {
           requests[key] = this.generateRequests(
             element,
             typeof element === 'string' ? root : root + '/' + key
           );
+          // }
         }
       }
+      // console.log('pathTree:', pathTree);
+    }
     return requests as TypeTree<T>;
   }
 
@@ -263,4 +301,10 @@ class Rest<T extends InputTypeTree> {
 }
 
 export { Rest };
-export type { PathTree, InputTypeTree, TypeTree };
+export type {
+  PathTree,
+  InputTypeTree,
+  TypeTree,
+  InputTypeTreeFunction,
+  PathTreeFunction,
+};

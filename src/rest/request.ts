@@ -1,7 +1,7 @@
 import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import RequestError from './requestError';
 
-const improveErrorMessage = (error: any, url?, method?) => {
+const improveErrorMessage = (error, url?, method?) => {
   let code =
     error.status ||
     error.statusCode ||
@@ -31,7 +31,7 @@ const improveErrorMessage = (error: any, url?, method?) => {
     response = JSON.parse(response);
   } catch (error) {
     console.error('Error response:', error);
-    response = response;
+    // response = response;
   }
 
   for (const key in error) {
@@ -55,7 +55,7 @@ const improveErrorMessage = (error: any, url?, method?) => {
 
 const getProtocol = (url: string) => {
   let protocol = '';
-  const regex = /\w*\:\/\//gm;
+  const regex = /\w*:\/\//gm;
   const foundProtocol = url.match(regex);
 
   if (!foundProtocol) {
@@ -82,7 +82,7 @@ const cleanUrl = (address = 'localhost', path?: string) => {
   return url;
 };
 
-const setNoCache = (config: { headers: {} }) => {
+const setNoCache = (config: { headers: object }) => {
   // config.headers['Cache-Control'] = 'no-cache no-store';
   const today = new Date();
   const yesterday = new Date(today);
@@ -95,7 +95,7 @@ const setNoCache = (config: { headers: {} }) => {
 };
 
 const setConfigByMethod = (
-  config: { headers: {}; data? },
+  config: { headers: object; data? },
   data,
   method = 'get'
 ) => {
@@ -120,7 +120,11 @@ const generateConfig = (
   noCache?: boolean,
   replaceHeaders?
 ) => {
-  let config: { headers: {}; data?: {}; params?: {} } = {
+  let config: {
+    headers: object;
+    data?: unknown;
+    params?: Record<string, string>;
+  } = {
     headers: {
       'Access-Control-Allow-Origin': '*',
       Accept: '*/*',
@@ -273,11 +277,12 @@ const request = async <Query = any, Input = Query, Output = Input>(
         ...config,
         method: method.toUpperCase(),
         body: JSON.stringify(data),
-      });
+      } as RequestInit);
       f['data'] = (await f.json()) || f.body;
       received = f as unknown as AxiosResponse<Output>;
       received.config = config as InternalAxiosRequestConfig;
     } else {
+      // console.log('axios', method, url, param2, param3);
       received = await axios[method](url, param2, param3);
     }
 
@@ -287,7 +292,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
       : received.data) as unknown as Output;
 
     return received as AxiosResponse<Output>;
-  } catch (error: any) {
+  } catch (error) {
     await reduceError(error, url, method, async () => {
       return (await request(
         address,
