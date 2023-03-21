@@ -25,21 +25,21 @@ const improveErrorMessage = (error, url?, method?) => {
     error.response?.responseText ||
     error.message ||
     '{}';
-  console.error('AN ERROR:', error, url, method);
+  // console.error('AN ERROR:', error, url, method);
 
   try {
     response = JSON.parse(response);
-  } catch (error) {
-    console.error('Error response:', error);
+  } catch (jError) {
+    // console.error('Error response:', jError);
     // response = response;
   }
 
-  for (const key in error) {
-    if (Object.prototype.hasOwnProperty.call(error, key)) {
-      const element = error[key];
-      console.error(key, element);
-    }
-  }
+  // for (const key in error) {
+  //   if (Object.prototype.hasOwnProperty.call(error, key)) {
+  //     const element = error[key];
+  //     console.error(key, element);
+  //   }
+  // }
 
   if (!code) {
     code = 400;
@@ -50,7 +50,7 @@ const improveErrorMessage = (error, url?, method?) => {
     response = 'CORS Error:' + response;
   }
 
-  return new RequestError(code, codeText, response);
+  return new RequestError(code, codeText, response, error, url, method);
 };
 
 const getProtocol = (url: string) => {
@@ -155,16 +155,16 @@ const reduceError = async (
   error: any,
   url: string,
   method: string,
-  newRequest
+  newRequest: (newError: any) => Promise<AxiosResponse>
 ) => {
   error = improveErrorMessage(error, url, method);
 
   if (error.code >= 500 && error.code < 600) {
-    console.error('CodeError:', error);
-    return await newRequest();
+    // console.error('CodeError:', error);
+    return await newRequest(error);
   } else {
-    console.error('Error:', error);
-    console.error(error);
+    // console.error('Error:', error);
+    // console.error(error);
     throw error;
   }
 };
@@ -236,7 +236,9 @@ const request = async <Query = any, Input = Query, Output = Input>(
   page?: number,
   pageSize?: number,
   noCache?: boolean,
-  replaceHeaders?
+  replaceHeaders?,
+  lastErrors?: any[],
+  retry = 5
 ) => {
   let url = cleanUrl(address, path);
 
@@ -292,8 +294,17 @@ const request = async <Query = any, Input = Query, Output = Input>(
       : received.data) as unknown as Output;
 
     return received as AxiosResponse<Output>;
-  } catch (error) {
-    await reduceError(error, url, method, async () => {
+  } catch (error: any) {
+    if (retry == undefined || retry === 0) {
+      error.lastErrors = lastErrors;
+      throw error;
+    } else if (retry < 0) {
+      console.warn('Retry is less than 0', retry);
+    }
+    lastErrors = lastErrors || [];
+    lastErrors.push(error);
+    await reduceError(error, url, method, async (error) => {
+      lastErrors?.push(error);
       return (await request(
         address,
         method,
@@ -303,7 +314,11 @@ const request = async <Query = any, Input = Query, Output = Input>(
         data,
         clearBaseURL,
         page,
-        pageSize
+        pageSize,
+        undefined,
+        undefined,
+        lastErrors,
+        retry - 1
       )) as AxiosResponse<Output>;
     });
   }
