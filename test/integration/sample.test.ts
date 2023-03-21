@@ -185,17 +185,14 @@ dotenv.config();
 // });
 
 test('sample PNCP', async () => {
-  const pncp: Rest<PNCPTypeTree> = new Rest<PNCPTypeTree>(
-    'https://pncp.gov.br',
-    'api/pncp/v1',
-    pncpTree
-  );
-  const pncpRequestTree: TypeTree<PNCPTypeTree> = pncp.getRequestTree();
-
+  // const pncp: Rest<PNCPTypeTree> = new Rest<PNCPTypeTree>(
+  //   'https://pncp.gov.br',
+  //   'api/pncp/v1',
+  //   pncpTree
+  // );
+  // const pncpRequestTree: TypeTree<PNCPTypeTree> = pncp.getRequestTree();
   // console.log(pncpRequestTree);
-
-  const companies = (await pncpRequestTree?.orgaos.read())?.data;
-
+  // const companies = (await pncpRequestTree?.orgaos.read())?.data;
   // const auxProposals = (
   //   await pncpRequestTree?.orgaos
   //     .cnpj('07093503000106')
@@ -204,7 +201,6 @@ test('sample PNCP', async () => {
   //     .itens.number(1)
   //     .resultados.read()
   // )?.data;
-
   // const response = (
   //   await pncpRequestTree?.orgaos
   //     .cnpj('07093503000106')
@@ -212,7 +208,6 @@ test('sample PNCP', async () => {
   //     .sequential(1)
   //     .read()
   // )?.data;
-
   // const arquivos = (
   //   await pncpRequestTree.orgaos
   //     .cnpj('07093503000106')
@@ -220,12 +215,10 @@ test('sample PNCP', async () => {
   //     .sequential(1)
   //     .arquivos.read()
   // )?.data;
-
-  console.log('companies', companies);
+  // console.log('companies', companies);
   // console.log('auxProposals', auxProposals);
   // console.log('response', response);
   // console.log('arquivos', arquivos);
-
   // const auxItems = (
   //   await pncpRequestTree?.orgaos
   //     .cnpj('07093503000106')
@@ -233,6 +226,5 @@ test('sample PNCP', async () => {
   //     .sequential(1)
   //     .itens.read()
   // )?.data;
-
   // console.log('auxItems', auxItems);
 });
