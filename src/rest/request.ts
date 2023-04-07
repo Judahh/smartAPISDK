@@ -280,7 +280,13 @@ const request = async <Query = any, Input = Query, Output = Input>(
         method: method.toUpperCase(),
         body: JSON.stringify(data),
       } as RequestInit);
-      f['data'] = (await f.json()) || f.body;
+      let fData;
+      try {
+        fData = await f.json();
+      } catch (error) {
+        fData = f.body;
+      }
+      f['data'] = fData || f.body;
       received = f as unknown as AxiosResponse<Output>;
       received.config = config as InternalAxiosRequestConfig;
     } else {
