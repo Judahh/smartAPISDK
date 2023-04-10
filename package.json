@@ -1,7 +1,7 @@
 {
   "name": "smart-api-sdk",
   "productName": "smartAPISDK",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": false,
   "description": "Smart API SDK",
   "main": "dist/src/index.js",

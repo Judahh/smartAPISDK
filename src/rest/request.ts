@@ -278,7 +278,9 @@ const request = async <Query = any, Input = Query, Output = Input>(
       //use fetch
       const { params } = config;
       delete config.params;
-      url += (url.includes('?') ? '&' : '?') + new URLSearchParams(params);
+      let p = new URLSearchParams(params).toString();
+      p = p ? (url.includes('?') ? '&' : '?') + p : '';
+      url += p;
       const f = await fetch(url, {
         ...config,
         method: method.toUpperCase(),
