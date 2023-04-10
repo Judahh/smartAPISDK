@@ -322,11 +322,12 @@ const request = async <Query = any, Input = Query, Output = Input>(
       p = p && pA ? `${p}&${pA}` : p || pA;
       p = p ? (url.includes('?') ? '&' : '?') + p : '';
       url += p;
-      const f = await fetch(url, {
+      const r = {
         ...config,
         method: method.toUpperCase(),
         body: JSON.stringify(data),
-      } as RequestInit);
+      } as RequestInit;
+      const f = await fetch(url, r);
       let fData;
       try {
         fData = await f.json();
