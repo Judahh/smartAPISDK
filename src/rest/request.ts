@@ -257,10 +257,11 @@ const paramsToString = (params: Record<string, string> | undefined) => {
       if (Object.hasOwnProperty.call(params, key)) {
         const element = params[key];
         string += Array.isArray(element)
-          ? element.reduce((p, c) => p + `${key}=${c}&`, '')
+          ? element.map((c) => `${key}=${c}`, '').join('&')
           : `${key}=${element}&`;
       }
     }
+    string = string[string.length - 1] === '&' ? string.slice(0, -1) : string;
     return string;
   }
   return new URLSearchParams(params).toString();
