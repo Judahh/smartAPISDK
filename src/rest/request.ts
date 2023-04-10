@@ -135,6 +135,7 @@ const generateConfig = (
   if (page) config.headers['page'] = page;
   if (pageSize) config.headers['pageSize'] = pageSize;
   if (query) config.params = query;
+  if (data) config.headers['Content-Type'] = 'application/json';
 
   if (noCache) {
     // console.log('noCache received header', received, received.headers);
@@ -214,7 +215,6 @@ const addParamsToUrl = (
   for (const key in urlParams) {
     if (Object.hasOwnProperty.call(urlParams, key)) {
       const element = urlParams[key];
-      // append to url as query param ?key=value for the first or &key=value for the rest
       url += url.includes('?') ? '&' : '?';
       if (Array.isArray(element)) {
         const array: string[] = [];
@@ -236,11 +236,8 @@ const splitArrayParams = (params: Record<string, string> | undefined) => {
       if (Object.hasOwnProperty.call(params, key)) {
         const element = params[key];
         if (Array.isArray(element)) {
-          // const array: string[] = [];
-          // element.forEach((value) => {
-          //   array.push(`${key}[]=${value}`);
-          // });
-          paramsA[`${key}[]`] = element; //array.join('&');
+          // paramsA[key] = element;
+          paramsA[`${key}[]`] = element;
           delete params[key];
           continue;
         }
@@ -312,7 +309,10 @@ const request = async <Query = any, Input = Query, Output = Input>(
     // console.log('Param3', param3);
 
     let received: AxiosResponse<Output>;
-    if (urlParams) {
+    if (
+      urlParams // &&
+      // method === 'put'
+    ) {
       //use fetch
       const paramsI = config.params;
       delete config.params;
@@ -322,11 +322,25 @@ const request = async <Query = any, Input = Query, Output = Input>(
       p = p && pA ? `${p}&${pA}` : p || pA;
       p = p ? (url.includes('?') ? '&' : '?') + p : '';
       url += p;
+
       const r = {
         ...config,
         method: method.toUpperCase(),
-        body: JSON.stringify(data),
       } as RequestInit;
+      if (data && Object.keys(data).length > 0) {
+        // const formData = new FormData();
+        // formData.append('json', JSON.stringify(data));
+        // r.body = formData;
+        try {
+          r.body = JSON.stringify(data);
+          if (!r.headers) r.headers = {};
+          if (!r.headers['Content-Type'])
+            r.headers['Content-Type'] = 'application/json';
+        } catch (error) {
+          r.body = undefined;
+          console.error('error', error);
+        }
+      }
       const f = await fetch(url, r);
       let fData;
       try {
