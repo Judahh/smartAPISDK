@@ -229,6 +229,43 @@ const addParamsToUrl = (
   return url;
 };
 
+const splitArrayParams = (params: Record<string, string> | undefined) => {
+  const paramsA: Record<string, string> = {};
+  if (params)
+    for (const key in params) {
+      if (Object.hasOwnProperty.call(params, key)) {
+        const element = params[key];
+        if (Array.isArray(element)) {
+          // const array: string[] = [];
+          // element.forEach((value) => {
+          //   array.push(`${key}[]=${value}`);
+          // });
+          paramsA[`${key}[]`] = element; //array.join('&');
+          delete params[key];
+          continue;
+        }
+      }
+    }
+  return { params, paramsA };
+};
+
+const paramsToString = (params: Record<string, string> | undefined) => {
+  if (!params) return '';
+  if (Object.values(params).some((e) => Array.isArray(e))) {
+    let string = '';
+    for (const key in params) {
+      if (Object.hasOwnProperty.call(params, key)) {
+        const element = params[key];
+        string += Array.isArray(element)
+          ? element.reduce((p, c) => p + `${key}=${c}&`, '')
+          : `${key}=${element}&`;
+      }
+    }
+    return string;
+  }
+  return new URLSearchParams(params).toString();
+};
+
 const request = async <Query = any, Input = Query, Output = Input>(
   address = 'localhost',
   method = 'get',
@@ -276,9 +313,12 @@ const request = async <Query = any, Input = Query, Output = Input>(
     let received: AxiosResponse<Output>;
     if (urlParams) {
       //use fetch
-      const { params } = config;
+      const paramsI = config.params;
       delete config.params;
-      let p = new URLSearchParams(params).toString();
+      const { params, paramsA } = splitArrayParams(paramsI);
+      let p = paramsToString(params);
+      const pA = paramsToString(paramsA);
+      p = p && pA ? `${p}&${pA}` : p || pA;
       p = p ? (url.includes('?') ? '&' : '?') + p : '';
       url += p;
       const f = await fetch(url, {
