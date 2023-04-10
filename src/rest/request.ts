@@ -192,7 +192,11 @@ const splitUrlParams = <T = object>(query?: T) => {
   for (const key in query) {
     if (Object.hasOwnProperty.call(query, key)) {
       const element = query[key];
-      if (key.includes('.$') || element == null) {
+      if (
+        key.includes('.$') ||
+        element == null ||
+        (Array.isArray(element) && element.some((e) => e == null))
+      ) {
         urlParams[key] = element;
         delete query[key];
       }
