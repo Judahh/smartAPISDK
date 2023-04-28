@@ -338,8 +338,8 @@ const request = async <Query = any, Input = Query, Output = Input>(
         // r.body = formData;
         try {
           r.body = JSON.stringify(data);
-          if (replaceHeaders) r.headers = replaceHeaders;
-          if (addedHeaders) r.headers = { ...r.headers, ...addedHeaders };
+          // if (replaceHeaders) r.headers = replaceHeaders;
+          // if (addedHeaders) r.headers = { ...r.headers, ...addedHeaders };
           if (!r.headers) r.headers = {};
           if (!r.headers?.['Content-Type'])
             r.headers['Content-Type'] = 'application/json';
