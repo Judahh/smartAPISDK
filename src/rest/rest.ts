@@ -28,6 +28,7 @@ type TypeTreeFinalFunction<T extends InputType> = (
   page?: number,
   pageSize?: number,
   noCache?: boolean,
+  addedHeaders?,
   replaceHeaders?
 ) => Promise<AxiosResponse<T['output']>> | undefined;
 
@@ -106,6 +107,7 @@ class Rest<T extends InputTypeTree> {
   private pathTree: PathTree;
   private noCache?: boolean;
   private replaceHeaders?;
+  private addedHeaders?;
   private requestTree: TypeTree<T>;
   private needsToken?: boolean;
   private timeoutThreshold = 1000;
@@ -119,6 +121,7 @@ class Rest<T extends InputTypeTree> {
     options?: {
       clearBaseURL?: boolean;
       noCache?: boolean;
+      addedHeaders?;
       replaceHeaders?;
       needsToken?: boolean;
       timeoutThreshold?: number;
@@ -133,6 +136,7 @@ class Rest<T extends InputTypeTree> {
     this.pathTree = pathTree || ({} as PathTree);
     this.noCache = options?.noCache || false;
     this.replaceHeaders = options?.replaceHeaders || false;
+    this.addedHeaders = options?.addedHeaders || undefined;
     this.requestTree = this.generateRequests(this.pathTree, this.root);
     this.needsToken = options?.needsToken || false;
     this.timeoutThreshold = options?.timeoutThreshold || this.timeoutThreshold;
@@ -151,6 +155,7 @@ class Rest<T extends InputTypeTree> {
       page?: number,
       pageSize?: number,
       noCache?: boolean,
+      addedHeaders?,
       replaceHeaders?
     ) => {
       let newQuery: Query | undefined = query ? query : ({} as Query);
@@ -167,6 +172,7 @@ class Rest<T extends InputTypeTree> {
         page,
         pageSize,
         noCache || this.noCache,
+        addedHeaders || this.addedHeaders,
         replaceHeaders || this.replaceHeaders
       );
     };
