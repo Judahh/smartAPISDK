@@ -118,6 +118,7 @@ const generateConfig = (
   page?: number,
   pageSize?: number,
   noCache?: boolean,
+  addedHeaders?,
   replaceHeaders?
 ) => {
   let config: {
@@ -147,6 +148,8 @@ const generateConfig = (
       headers: replaceHeaders,
     };
   }
+
+  config.headers = { ...config.headers, ...addedHeaders };
 
   config = setConfigByMethod(config, data, method);
   return config;
@@ -275,6 +278,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
   page?: number,
   pageSize?: number,
   noCache?: boolean,
+  addedHeaders?,
   replaceHeaders?,
   lastErrors?: any[],
   retry = 5
@@ -292,6 +296,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
       page,
       pageSize,
       noCache,
+      addedHeaders,
       replaceHeaders
     );
 
@@ -333,8 +338,10 @@ const request = async <Query = any, Input = Query, Output = Input>(
         // r.body = formData;
         try {
           r.body = JSON.stringify(data);
+          if (replaceHeaders) r.headers = replaceHeaders;
+          if (addedHeaders) r.headers = { ...r.headers, ...addedHeaders };
           if (!r.headers) r.headers = {};
-          if (!r.headers['Content-Type'])
+          if (!r.headers?.['Content-Type'])
             r.headers['Content-Type'] = 'application/json';
         } catch (error) {
           r.body = undefined;
@@ -383,8 +390,9 @@ const request = async <Query = any, Input = Query, Output = Input>(
         clearBaseURL,
         page,
         pageSize,
-        undefined,
-        undefined,
+        noCache,
+        addedHeaders,
+        replaceHeaders,
         lastErrors,
         retry - 1
       )) as AxiosResponse<Output>;
