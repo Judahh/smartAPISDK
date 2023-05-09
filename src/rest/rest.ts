@@ -1,5 +1,5 @@
 import { JsonWebToken } from '@midware/mauth';
-import { AxiosResponse } from 'axios';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { request } from './request';
 
 type PathTreeFunction = (key) => string | PathTree | PathTreeFunction;
@@ -29,7 +29,8 @@ type TypeTreeFinalFunction<T extends InputType> = (
   pageSize?: number,
   noCache?: boolean,
   addedHeaders?,
-  replaceHeaders?
+  replaceHeaders?,
+  config?: AxiosRequestConfig
 ) => Promise<AxiosResponse<T['output']>> | undefined;
 
 type TypeTree<T extends InputType | InputTypeTree | InputTypeTreeFunction> = {
@@ -113,6 +114,8 @@ class Rest<T extends InputTypeTree> {
   private timeoutThreshold = 1000;
   private autoRefreshToken: boolean;
   private baseQuery?: unknown;
+  private retry?: number;
+  private config?: AxiosRequestConfig;
 
   constructor(
     address = 'localhost',
@@ -128,6 +131,8 @@ class Rest<T extends InputTypeTree> {
       autoRefreshToken?: boolean;
       baseQuery?: unknown;
       apiToken?: string;
+      retry?: number;
+      config?: AxiosRequestConfig;
     }
   ) {
     this.address = address;
@@ -143,6 +148,8 @@ class Rest<T extends InputTypeTree> {
     this.autoRefreshToken = options?.autoRefreshToken || false;
     this.token = options?.apiToken;
     this.baseQuery = options?.baseQuery || undefined;
+    this.retry = options?.retry;
+    this.config = options?.config;
   }
 
   private getRequest<Query = unknown, Input = Query, Output = Input>(
@@ -156,7 +163,8 @@ class Rest<T extends InputTypeTree> {
       pageSize?: number,
       noCache?: boolean,
       addedHeaders?,
-      replaceHeaders?
+      replaceHeaders?,
+      config?: AxiosRequestConfig
     ) => {
       let newQuery: Query | undefined = query ? query : ({} as Query);
       newQuery = this.baseQuery ? { ...this.baseQuery, ...newQuery } : newQuery;
@@ -173,7 +181,10 @@ class Rest<T extends InputTypeTree> {
         pageSize,
         noCache || this.noCache,
         addedHeaders || this.addedHeaders,
-        replaceHeaders || this.replaceHeaders
+        replaceHeaders || this.replaceHeaders,
+        undefined,
+        this.retry,
+        this.config ? { ...this.config, ...config } : config
       );
     };
     return newRequest;
