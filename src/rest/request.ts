@@ -1,4 +1,8 @@
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, {
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import RequestError from './requestError';
 
 const improveErrorMessage = (error, url?, method?) => {
@@ -82,11 +86,12 @@ const cleanUrl = (address = 'localhost', path?: string) => {
   return url;
 };
 
-const setNoCache = (config: { headers: object }) => {
+const setNoCache = (config: AxiosRequestConfig) => {
   // config.headers['Cache-Control'] = 'no-cache no-store';
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
+  if (!config.headers) config.headers = {};
   config.headers['Cache-Control'] = 'public, max-age=0, must-revalidate';
   // config.headers['cache-control'] = 'public, max-age=0, must-revalidate';
   config.headers['If-Modified-Since'] = yesterday.toDateString();
@@ -95,7 +100,7 @@ const setNoCache = (config: { headers: object }) => {
 };
 
 const setConfigByMethod = (
-  config: { headers: object; data? },
+  config: AxiosRequestConfig,
   data,
   method = 'get'
 ) => {
@@ -119,19 +124,19 @@ const generateConfig = (
   pageSize?: number,
   noCache?: boolean,
   addedHeaders?,
-  replaceHeaders?
+  replaceHeaders?,
+  config?: AxiosRequestConfig
 ) => {
-  let config: {
-    headers: object;
-    data?: unknown;
-    params?: Record<string, string>;
-  } = {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      Accept: '*/*',
-    },
-  };
+  config =
+    config ||
+    ({
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        Accept: '*/*',
+      },
+    } as AxiosRequestConfig);
 
+  if (!config.headers) config.headers = {};
   if (token) config.headers['Authorization'] = `Bearer ${token}`;
   if (page) config.headers['page'] = page;
   if (pageSize) config.headers['pageSize'] = pageSize;
@@ -281,14 +286,15 @@ const request = async <Query = any, Input = Query, Output = Input>(
   addedHeaders?,
   replaceHeaders?,
   lastErrors?: any[],
-  retry = 5
+  retry = 5,
+  config?: AxiosRequestConfig
 ) => {
   let url = cleanUrl(address, path);
 
   try {
     const protocol = getProtocol(url);
     const urlParams = splitUrlParams<Query>(query);
-    const config = generateConfig(
+    config = generateConfig(
       method,
       token,
       query,
@@ -297,7 +303,8 @@ const request = async <Query = any, Input = Query, Output = Input>(
       pageSize,
       noCache,
       addedHeaders,
-      replaceHeaders
+      replaceHeaders,
+      config
     );
 
     const param2 = generateParam2(method, clearBaseURL, config, data);
