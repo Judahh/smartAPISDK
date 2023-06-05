@@ -272,6 +272,12 @@ const paramsToString = (params: Record<string, string> | undefined) => {
   return new URLSearchParams(params).toString();
 };
 
+export enum RequestAPI {
+  any = 0,
+  axios = 1,
+  fetch = 2,
+}
+
 const request = async <Query = any, Input = Query, Output = Input>(
   address = 'localhost',
   method = 'get',
@@ -287,7 +293,8 @@ const request = async <Query = any, Input = Query, Output = Input>(
   replaceHeaders?,
   lastErrors?: any[],
   retry = 5,
-  config?: AxiosRequestConfig
+  config?: AxiosRequestConfig,
+  requestAPI = RequestAPI.any
 ) => {
   let url = cleanUrl(address, path);
 
@@ -322,7 +329,8 @@ const request = async <Query = any, Input = Query, Output = Input>(
 
     let received: AxiosResponse<Output>;
     if (
-      urlParams // &&
+      requestAPI != RequestAPI.axios &&
+      (requestAPI == RequestAPI.fetch || urlParams) // &&
       // method === 'put'
     ) {
       //use fetch
@@ -401,7 +409,9 @@ const request = async <Query = any, Input = Query, Output = Input>(
         addedHeaders,
         replaceHeaders,
         lastErrors,
-        retry - 1
+        retry - 1,
+        config,
+        requestAPI
       )) as AxiosResponse<Output>;
     });
   }

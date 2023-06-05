@@ -1,6 +1,6 @@
 import { JsonWebToken } from '@midware/mauth';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
-import { request } from './request';
+import { request, RequestAPI } from './request';
 
 type PathTreeFunction = (key) => string | PathTree | PathTreeFunction;
 
@@ -30,7 +30,8 @@ type TypeTreeFinalFunction<T extends InputType> = (
   noCache?: boolean,
   addedHeaders?,
   replaceHeaders?,
-  config?: AxiosRequestConfig
+  config?: AxiosRequestConfig,
+  requestAPI?: RequestAPI
 ) => Promise<AxiosResponse<T['output']>> | undefined;
 
 type TypeTree<T extends InputType | InputTypeTree | InputTypeTreeFunction> = {
@@ -116,6 +117,7 @@ class Rest<T extends InputTypeTree> {
   private baseQuery?: unknown;
   private retry?: number;
   private config?: AxiosRequestConfig;
+  private requestAPI?: RequestAPI;
 
   constructor(
     address = 'localhost',
@@ -133,6 +135,7 @@ class Rest<T extends InputTypeTree> {
       apiToken?: string;
       retry?: number;
       config?: AxiosRequestConfig;
+      requestAPI?: RequestAPI;
     }
   ) {
     this.address = address;
@@ -150,6 +153,7 @@ class Rest<T extends InputTypeTree> {
     this.baseQuery = options?.baseQuery || undefined;
     this.retry = options?.retry;
     this.config = options?.config;
+    this.requestAPI = options?.requestAPI;
   }
 
   private getRequest<Query = unknown, Input = Query, Output = Input>(
@@ -164,7 +168,8 @@ class Rest<T extends InputTypeTree> {
       noCache?: boolean,
       addedHeaders?,
       replaceHeaders?,
-      config?: AxiosRequestConfig
+      config?: AxiosRequestConfig,
+      requestAPI?: RequestAPI
     ) => {
       let newQuery: Query | undefined = query ? query : ({} as Query);
       newQuery = this.baseQuery ? { ...this.baseQuery, ...newQuery } : newQuery;
@@ -184,7 +189,8 @@ class Rest<T extends InputTypeTree> {
         replaceHeaders || this.replaceHeaders,
         undefined,
         this.retry,
-        this.config ? { ...this.config, ...config } : config
+        this.config ? { ...this.config, ...config } : config,
+        requestAPI || this.requestAPI
       );
     };
     return newRequest;
