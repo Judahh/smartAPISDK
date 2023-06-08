@@ -430,6 +430,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
           replaceHeaders,
           lastErrors,
           retry - 1,
+          retryDelay,
           errorsToRetry,
           config,
           requestAPI
