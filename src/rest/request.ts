@@ -278,6 +278,8 @@ export enum RequestAPI {
   fetch = 2,
 }
 
+const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
 const request = async <Query = any, Input = Query, Output = Input>(
   address = 'localhost',
   method = 'get',
@@ -293,6 +295,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
   replaceHeaders?,
   lastErrors?: any[],
   retry = 5,
+  retryDelay = 0,
   errorsToRetry?: (number | string | Error | unknown)[],
   config?: AxiosRequestConfig,
   requestAPI = RequestAPI.any
@@ -405,6 +408,10 @@ const request = async <Query = any, Input = Query, Output = Input>(
           errorsToRetry?.includes(error?.message) ||
           errorsToRetry?.includes(error)))
     ) {
+      if (retryDelay > 0) {
+        console.warn('Request Awaiting Retry Delay:', retryDelay);
+        await delay(retryDelay);
+      }
       console.warn('Request Retry:', retry);
       await reduceError(error, url, method, async (error) => {
         lastErrors?.push(error);
