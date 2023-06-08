@@ -31,7 +31,10 @@ type TypeTreeFinalFunction<T extends InputType> = (
   addedHeaders?,
   replaceHeaders?,
   config?: AxiosRequestConfig,
-  requestAPI?: RequestAPI
+  requestAPI?: RequestAPI,
+  token?: string,
+  retry?: number,
+  errorsToRetry?: string[]
 ) => Promise<AxiosResponse<T['output']>> | undefined;
 
 type TypeTree<T extends InputType | InputTypeTree | InputTypeTreeFunction> = {
@@ -118,6 +121,7 @@ class Rest<T extends InputTypeTree> {
   private retry?: number;
   private config?: AxiosRequestConfig;
   private requestAPI?: RequestAPI;
+  private errorsToRetry?: (number | string | Error | unknown)[];
 
   constructor(
     address = 'localhost',
@@ -134,6 +138,7 @@ class Rest<T extends InputTypeTree> {
       baseQuery?: unknown;
       apiToken?: string;
       retry?: number;
+      errorsToRetry?: (number | string | Error | unknown)[];
       config?: AxiosRequestConfig;
       requestAPI?: RequestAPI;
     }
@@ -154,6 +159,7 @@ class Rest<T extends InputTypeTree> {
     this.retry = options?.retry;
     this.config = options?.config;
     this.requestAPI = options?.requestAPI;
+    this.errorsToRetry = options?.errorsToRetry;
   }
 
   private getRequest<Query = unknown, Input = Query, Output = Input>(
@@ -169,7 +175,10 @@ class Rest<T extends InputTypeTree> {
       addedHeaders?,
       replaceHeaders?,
       config?: AxiosRequestConfig,
-      requestAPI?: RequestAPI
+      requestAPI?: RequestAPI,
+      token?: string,
+      retry?: number,
+      errorsToRetry?: string[]
     ) => {
       let newQuery: Query | undefined = query ? query : ({} as Query);
       newQuery = this.baseQuery ? { ...this.baseQuery, ...newQuery } : newQuery;
@@ -178,7 +187,8 @@ class Rest<T extends InputTypeTree> {
         this.address,
         method,
         path,
-        this.needsToken || this.token ? await this.getToken() : undefined,
+        token ||
+          (this.needsToken || this.token ? await this.getToken() : undefined),
         newQuery,
         data,
         this.clearBaseURL,
@@ -188,7 +198,8 @@ class Rest<T extends InputTypeTree> {
         addedHeaders || this.addedHeaders,
         replaceHeaders || this.replaceHeaders,
         undefined,
-        this.retry,
+        retry || this.retry,
+        errorsToRetry || this.errorsToRetry,
         this.config ? { ...this.config, ...config } : config,
         requestAPI || this.requestAPI
       );

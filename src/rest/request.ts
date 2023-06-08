@@ -293,6 +293,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
   replaceHeaders?,
   lastErrors?: any[],
   retry = 5,
+  errorsToRetry?: (number | string | Error | unknown)[],
   config?: AxiosRequestConfig,
   requestAPI = RequestAPI.any
 ) => {
@@ -385,35 +386,51 @@ const request = async <Query = any, Input = Query, Output = Input>(
 
     return received as AxiosResponse<Output>;
   } catch (error: any) {
+    console.error('Request Error:', error);
     if (retry == undefined || retry === 0) {
       error.lastErrors = lastErrors;
       throw error;
     } else if (retry < 0) {
-      console.warn('Retry is less than 0', retry);
+      console.warn('Request Retry is less than 0', retry);
     }
     lastErrors = lastErrors || [];
     lastErrors.push(error);
-    await reduceError(error, url, method, async (error) => {
-      lastErrors?.push(error);
-      return (await request(
-        address,
-        method,
-        path,
-        token,
-        query,
-        data,
-        clearBaseURL,
-        page,
-        pageSize,
-        noCache,
-        addedHeaders,
-        replaceHeaders,
-        lastErrors,
-        retry - 1,
-        config,
-        requestAPI
-      )) as AxiosResponse<Output>;
-    });
+    if (
+      errorsToRetry == undefined ||
+      errorsToRetry?.length == 0 ||
+      (errorsToRetry?.length > 0 &&
+        (errorsToRetry?.includes(error?.code) ||
+          errorsToRetry?.includes(error?.codeText) ||
+          errorsToRetry?.includes(error?.response) ||
+          errorsToRetry?.includes(error?.message) ||
+          errorsToRetry?.includes(error)))
+    ) {
+      console.warn('Request Retry:', retry);
+      await reduceError(error, url, method, async (error) => {
+        lastErrors?.push(error);
+        return (await request(
+          address,
+          method,
+          path,
+          token,
+          query,
+          data,
+          clearBaseURL,
+          page,
+          pageSize,
+          noCache,
+          addedHeaders,
+          replaceHeaders,
+          lastErrors,
+          retry - 1,
+          errorsToRetry,
+          config,
+          requestAPI
+        )) as AxiosResponse<Output>;
+      });
+    } else {
+      throw error;
+    }
   }
 };
 
