@@ -35,7 +35,9 @@ type TypeTreeFinalFunction<T extends InputType> = (
   token?: string,
   retry?: number,
   retryDelay?: number,
-  errorsToRetry?: string[]
+  errorsToRetry?: string[],
+  minErrorCode?: number,
+  maxErrorCode?: number
 ) => Promise<AxiosResponse<T['output']>> | undefined;
 
 type TypeTree<T extends InputType | InputTypeTree | InputTypeTreeFunction> = {
@@ -124,6 +126,8 @@ class Rest<T extends InputTypeTree> {
   private requestAPI?: RequestAPI;
   private errorsToRetry?: (number | string | Error | unknown)[];
   private retryDelay?: number;
+  private minErrorCode?: number;
+  private maxErrorCode?: number;
 
   constructor(
     address = 'localhost',
@@ -142,6 +146,8 @@ class Rest<T extends InputTypeTree> {
       retry?: number;
       retryDelay?: number;
       errorsToRetry?: (number | string | Error | unknown)[];
+      minErrorCode?: number;
+      maxErrorCode?: number;
       config?: AxiosRequestConfig;
       requestAPI?: RequestAPI;
     }
@@ -164,6 +170,8 @@ class Rest<T extends InputTypeTree> {
     this.requestAPI = options?.requestAPI;
     this.errorsToRetry = options?.errorsToRetry;
     this.retryDelay = options?.retryDelay;
+    this.minErrorCode = options?.minErrorCode;
+    this.maxErrorCode = options?.maxErrorCode;
   }
 
   private getRequest<Query = unknown, Input = Query, Output = Input>(
@@ -183,7 +191,9 @@ class Rest<T extends InputTypeTree> {
       token?: string,
       retry?: number,
       retryDelay?: number,
-      errorsToRetry?: string[]
+      errorsToRetry?: string[],
+      minErrorCode?: number,
+      maxErrorCode?: number
     ) => {
       let newQuery: Query | undefined = query ? query : ({} as Query);
       newQuery = this.baseQuery ? { ...this.baseQuery, ...newQuery } : newQuery;
@@ -206,6 +216,8 @@ class Rest<T extends InputTypeTree> {
         retry || this.retry,
         retryDelay || this.retryDelay,
         errorsToRetry || this.errorsToRetry,
+        minErrorCode || this.minErrorCode,
+        maxErrorCode || this.maxErrorCode,
         this.config ? { ...this.config, ...config } : config,
         requestAPI || this.requestAPI
       );

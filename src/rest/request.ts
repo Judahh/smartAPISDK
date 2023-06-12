@@ -164,11 +164,13 @@ const reduceError = async (
   error: any,
   url: string,
   method: string,
-  newRequest: (newError: any) => Promise<AxiosResponse>
+  newRequest: (newError: any) => Promise<AxiosResponse>,
+  minErrorCode = 500,
+  maxErrorCode = 600
 ) => {
   error = improveErrorMessage(error, url, method);
 
-  if (error.code >= 500 && error.code < 600) {
+  if (error.code >= minErrorCode && error.code < maxErrorCode) {
     // console.error('CodeError:', error);
     return await newRequest(error);
   } else {
@@ -297,6 +299,8 @@ const request = async <Query = any, Input = Query, Output = Input>(
   retry = 5,
   retryDelay = 0,
   errorsToRetry?: (number | string | Error | unknown)[],
+  minErrorCode = 500,
+  maxErrorCode = 600,
   config?: AxiosRequestConfig,
   requestAPI = RequestAPI.any
 ) => {
@@ -413,29 +417,38 @@ const request = async <Query = any, Input = Query, Output = Input>(
         await delay(retryDelay);
       }
       console.warn('Request Retry:', retry);
-      await reduceError(error, url, method, async (error) => {
-        lastErrors?.push(error);
-        return (await request(
-          address,
-          method,
-          path,
-          token,
-          query,
-          data,
-          clearBaseURL,
-          page,
-          pageSize,
-          noCache,
-          addedHeaders,
-          replaceHeaders,
-          lastErrors,
-          retry - 1,
-          retryDelay,
-          errorsToRetry,
-          config,
-          requestAPI
-        )) as AxiosResponse<Output>;
-      });
+      await reduceError(
+        error,
+        url,
+        method,
+        async (error) => {
+          lastErrors?.push(error);
+          return (await request(
+            address,
+            method,
+            path,
+            token,
+            query,
+            data,
+            clearBaseURL,
+            page,
+            pageSize,
+            noCache,
+            addedHeaders,
+            replaceHeaders,
+            lastErrors,
+            retry - 1,
+            retryDelay,
+            errorsToRetry,
+            minErrorCode,
+            maxErrorCode,
+            config,
+            requestAPI
+          )) as AxiosResponse<Output>;
+        },
+        minErrorCode,
+        maxErrorCode
+      );
     } else {
       throw error;
     }
