@@ -36,6 +36,7 @@ type TypeTreeFinalFunction<T extends InputType> = (
   retry?: number,
   retryDelay?: number,
   errorsToRetry?: string[],
+  errorsToNotRetry?: string[],
   minErrorCode?: number,
   maxErrorCode?: number
 ) => Promise<AxiosResponse<T['output']>> | undefined;
@@ -125,6 +126,7 @@ class Rest<T extends InputTypeTree> {
   private config?: AxiosRequestConfig;
   private requestAPI?: RequestAPI;
   private errorsToRetry?: (number | string | Error | unknown)[];
+  private errorsToNotRetry?: (number | string | Error | unknown)[];
   private retryDelay?: number;
   private minErrorCode?: number;
   private maxErrorCode?: number;
@@ -146,6 +148,7 @@ class Rest<T extends InputTypeTree> {
       retry?: number;
       retryDelay?: number;
       errorsToRetry?: (number | string | Error | unknown)[];
+      errorsToNotRetry?: (number | string | Error | unknown)[];
       minErrorCode?: number;
       maxErrorCode?: number;
       config?: AxiosRequestConfig;
@@ -169,6 +172,7 @@ class Rest<T extends InputTypeTree> {
     this.config = options?.config;
     this.requestAPI = options?.requestAPI;
     this.errorsToRetry = options?.errorsToRetry;
+    this.errorsToNotRetry = options?.errorsToNotRetry;
     this.retryDelay = options?.retryDelay;
     this.minErrorCode = options?.minErrorCode;
     this.maxErrorCode = options?.maxErrorCode;
@@ -192,6 +196,7 @@ class Rest<T extends InputTypeTree> {
       retry?: number,
       retryDelay?: number,
       errorsToRetry?: string[],
+      errorsToNotRetry?: string[],
       minErrorCode?: number,
       maxErrorCode?: number
     ) => {
@@ -216,6 +221,7 @@ class Rest<T extends InputTypeTree> {
         retry || this.retry,
         retryDelay || this.retryDelay,
         errorsToRetry || this.errorsToRetry,
+        errorsToNotRetry || this.errorsToNotRetry,
         minErrorCode || this.minErrorCode,
         maxErrorCode || this.maxErrorCode,
         this.config ? { ...this.config, ...config } : config,
