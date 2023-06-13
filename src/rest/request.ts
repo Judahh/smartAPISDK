@@ -50,8 +50,8 @@ const improveErrorMessage = (error, url?, method?) => {
     if (url.includes('wroom') || url.includes('user') || url.includes('auth')) {
       code = 503;
     }
-    codeText = 'CORS Error:' + codeText;
-    response = 'CORS Error:' + response;
+    codeText = 'Possible CORS Error:' + codeText;
+    response = 'Possible CORS Error:' + response;
   }
 
   return new RequestError(code, codeText, response, error, url, method);
@@ -165,17 +165,46 @@ const reduceError = async (
   url: string,
   method: string,
   newRequest: (newError: any) => Promise<AxiosResponse>,
+  lastErrors?: any[],
+  retryDelay = 0,
+  errorsToRetry?: (number | string | Error | unknown)[],
+  errorsToNotRetry?: (number | string | Error | unknown)[],
   minErrorCode = 500,
   maxErrorCode = 600
 ) => {
   error = improveErrorMessage(error, url, method);
 
-  if (error.code >= minErrorCode && error.code < maxErrorCode) {
-    // console.error('CodeError:', error);
+  lastErrors = lastErrors || [];
+  lastErrors.push(error);
+
+  if (
+    ((error.code >= minErrorCode && error.code < maxErrorCode) ||
+      errorsToRetry == undefined ||
+      errorsToRetry?.length == 0 ||
+      (errorsToRetry?.length > 0 &&
+        (errorsToRetry?.includes(error?.code) ||
+          errorsToRetry?.includes(error?.codeText) ||
+          errorsToRetry?.includes(error?.response) ||
+          errorsToRetry?.includes(error?.message) ||
+          errorsToRetry?.includes(error)))) &&
+    (errorsToNotRetry == undefined ||
+      errorsToNotRetry?.length == 0 ||
+      (errorsToNotRetry?.length > 0 &&
+        !(
+          errorsToNotRetry?.includes(error?.code) ||
+          errorsToNotRetry?.includes(error?.codeText) ||
+          errorsToNotRetry?.includes(error?.response) ||
+          errorsToNotRetry?.includes(error?.message) ||
+          errorsToNotRetry?.includes(error)
+        )))
+  ) {
+    if (retryDelay > 0) {
+      console.warn('Request Awaiting Retry Delay:', retryDelay);
+      await delay(retryDelay);
+    }
+    console.error('Request Error:', error);
     return await newRequest(error);
   } else {
-    // console.error('Error:', error);
-    // console.error(error);
     throw error;
   }
 };
@@ -299,6 +328,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
   retry = 5,
   retryDelay = 0,
   errorsToRetry?: (number | string | Error | unknown)[],
+  errorsToNotRetry?: (number | string | Error | unknown)[],
   minErrorCode = 500,
   maxErrorCode = 600,
   config?: AxiosRequestConfig,
@@ -393,65 +423,51 @@ const request = async <Query = any, Input = Query, Output = Input>(
 
     return received as AxiosResponse<Output>;
   } catch (error: any) {
-    console.error('Request Error:', error);
     if (retry == undefined || retry === 0) {
       error.lastErrors = lastErrors;
       throw error;
     } else if (retry < 0) {
       console.warn('Request Retry is less than 0', retry);
-    }
-    lastErrors = lastErrors || [];
-    lastErrors.push(error);
-    if (
-      errorsToRetry == undefined ||
-      errorsToRetry?.length == 0 ||
-      (errorsToRetry?.length > 0 &&
-        (errorsToRetry?.includes(error?.code) ||
-          errorsToRetry?.includes(error?.codeText) ||
-          errorsToRetry?.includes(error?.response) ||
-          errorsToRetry?.includes(error?.message) ||
-          errorsToRetry?.includes(error)))
-    ) {
-      if (retryDelay > 0) {
-        console.warn('Request Awaiting Retry Delay:', retryDelay);
-        await delay(retryDelay);
-      }
-      console.warn('Request Retry:', retry);
-      await reduceError(
-        error,
-        url,
-        method,
-        async (error) => {
-          lastErrors?.push(error);
-          return (await request(
-            address,
-            method,
-            path,
-            token,
-            query,
-            data,
-            clearBaseURL,
-            page,
-            pageSize,
-            noCache,
-            addedHeaders,
-            replaceHeaders,
-            lastErrors,
-            retry - 1,
-            retryDelay,
-            errorsToRetry,
-            minErrorCode,
-            maxErrorCode,
-            config,
-            requestAPI
-          )) as AxiosResponse<Output>;
-        },
-        minErrorCode,
-        maxErrorCode
-      );
     } else {
-      throw error;
+      console.warn('Retry', retry);
     }
+    await reduceError(
+      error,
+      url,
+      method,
+      async (error) => {
+        lastErrors?.push(error);
+        return (await request(
+          address,
+          method,
+          path,
+          token,
+          query,
+          data,
+          clearBaseURL,
+          page,
+          pageSize,
+          noCache,
+          addedHeaders,
+          replaceHeaders,
+          lastErrors,
+          retry - 1,
+          retryDelay,
+          errorsToRetry,
+          errorsToNotRetry,
+          minErrorCode,
+          maxErrorCode,
+          config,
+          requestAPI
+        )) as AxiosResponse<Output>;
+      },
+      lastErrors,
+      retryDelay,
+      errorsToRetry,
+      errorsToNotRetry,
+      minErrorCode,
+      maxErrorCode
+    );
   }
 };
 
