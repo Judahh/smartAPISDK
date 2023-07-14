@@ -431,7 +431,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
     } else {
       console.warn('Retry', retry);
     }
-    await reduceError(
+    return await reduceError(
       error,
       url,
       method,

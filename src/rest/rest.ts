@@ -59,6 +59,63 @@ type ReturnTypeTree<T extends InputTypeTreeFunction> = (
   ? ReturnTypeTree<ReturnType<T>>
   : TypeTree<ReturnType<T>>;
 
+// receives an type like this:
+// {
+//   id: number,
+//   name: string,
+//   description: string,
+// }
+// and returns an type like this:
+// {
+//   id: number,
+//   name: string,
+//   description: string,
+//   'id.$gt': number,
+//   'id.$gte': number,
+//   'id.$lt': number,
+//   'id.$ne': number,
+//   'id.$lte': number,
+//   'id.$like': number,
+//   'id.$regex': number,
+//   'id[]': number[],
+//   'name.$gt': string,
+//   'name.$gte': string,
+//   'name.$lt': string,
+//   'name.$ne': string,
+//   'name.$lte': string,
+//   'name.$like': string,
+//   'name.$regex': string,
+//   'name[]': string[],
+//   'description.$gt': string,
+//   'description.$gte': string,
+//   'description.$lt': string,
+//   'description.$ne': string,
+//   'description.$lte': string,
+//   'description.$like': string,
+//   'description.$regex': string,
+//   'description[]': string[],
+// }
+// 'id.$gt' is different than id.$gt
+// 'id.$gt' is a property
+// id.$gt does not exist
+type AdvancedSearchProperties<T> = {
+  [K in keyof T as `${string & K}.$gt`]: T[K];
+} & {
+  [K in keyof T as `${string & K}.$gte`]: T[K];
+} & {
+  [K in keyof T as `${string & K}.$lt`]: T[K];
+} & {
+  [K in keyof T as `${string & K}.$ne`]: T[K];
+} & {
+  [K in keyof T as `${string & K}.$lte`]: T[K];
+} & {
+  [K in keyof T as `${string & K}.$like`]: T[K];
+} & {
+  [K in keyof T as `${string & K}.$regex`]: T[K];
+} & {
+  [K in keyof T as `${string & K}[]`]: T[K][];
+};
+
 // const samplePathTree: PathTree = {
 //   bidding: {
 //     create: 'post',
@@ -370,4 +427,5 @@ export type {
   TypeTree,
   InputTypeTreeFunction,
   PathTreeFunction,
+  AdvancedSearchProperties,
 };
