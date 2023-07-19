@@ -99,22 +99,41 @@ type ReturnTypeTree<T extends InputTypeTreeFunction> = (
 // 'id.$gt' is a property
 // id.$gt does not exist
 type AdvancedSearchProperties<T> = {
-  [K in keyof T as `${string & K}.$gt`]: T[K];
+  [K in keyof T as `${string & K}.$gt`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}.$gte`]: T[K];
+  [K in keyof T as `${string & K}.$gte`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}.$lt`]: T[K];
+  [K in keyof T as `${string & K}.$lt`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}.$ne`]: T[K];
+  [K in keyof T as `${string & K}.$ne`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}.$lte`]: T[K];
+  [K in keyof T as `${string & K}.$lte`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}.$like`]: T[K];
+  [K in keyof T as `${string & K}.$like`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}.$regex`]: T[K];
+  [K in keyof T as `${string & K}.$regex`]?: undefined | T[K];
 } & {
-  [K in keyof T as `${string & K}[]`]: T[K][];
+  [K in keyof T as `${string & K}[]`]?: undefined | T[K][];
+} & {
+  [K in keyof T as `${string & K}`]?: undefined | T[K][] | T[K];
 };
+
+// type teste = {
+//   id: number;
+//   name: string;
+// };
+
+// type teste2 = AdvancedSearchProperties<teste>;
+
+// const teste3: teste2 = {
+//   'id.$gt': 1,
+//   'id.$gte': 1,
+//   id: [1],
+//   'id[]': [1],
+//   name: ['1'],
+// };
+
+// console.log(teste3);
 
 // const samplePathTree: PathTree = {
 //   bidding: {
