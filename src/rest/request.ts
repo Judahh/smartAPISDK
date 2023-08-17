@@ -411,6 +411,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
       f['data'] = fData || f.body;
       received = f as unknown as AxiosResponse<Output>;
       received.config = config as InternalAxiosRequestConfig;
+      if (received.status >= 400) throw received;
     } else {
       // console.log('axios', method, url, param2, param3);
       received = await axios[method](url, param2, param3);
