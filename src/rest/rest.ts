@@ -206,6 +206,7 @@ class Rest<T extends InputTypeTree> {
   private retryDelay?: number;
   private minErrorCode?: number;
   private maxErrorCode?: number;
+  private onlyPath?: boolean;
 
   constructor(
     address = 'localhost',
@@ -229,6 +230,7 @@ class Rest<T extends InputTypeTree> {
       maxErrorCode?: number;
       config?: AxiosRequestConfig;
       requestAPI?: RequestAPI;
+      onlyPath?: boolean;
     }
   ) {
     this.address = address;
@@ -252,6 +254,7 @@ class Rest<T extends InputTypeTree> {
     this.retryDelay = options?.retryDelay;
     this.minErrorCode = options?.minErrorCode;
     this.maxErrorCode = options?.maxErrorCode;
+    this.onlyPath = options?.onlyPath;
   }
 
   private getRequest<Query = unknown, Input = Query, Output = Input>(
@@ -274,7 +277,8 @@ class Rest<T extends InputTypeTree> {
       errorsToRetry?: string[],
       errorsToNotRetry?: string[],
       minErrorCode?: number,
-      maxErrorCode?: number
+      maxErrorCode?: number,
+      onlyPath?: boolean
     ) => {
       let newQuery: Query | undefined = query ? query : ({} as Query);
       newQuery = this.baseQuery ? { ...this.baseQuery, ...newQuery } : newQuery;
@@ -301,7 +305,8 @@ class Rest<T extends InputTypeTree> {
         minErrorCode || this.minErrorCode,
         maxErrorCode || this.maxErrorCode,
         this.config ? { ...this.config, ...config } : config,
-        requestAPI || this.requestAPI
+        requestAPI || this.requestAPI,
+        onlyPath || this.onlyPath
       );
     };
     return newRequest;
