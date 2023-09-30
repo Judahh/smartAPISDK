@@ -71,10 +71,11 @@ const getProtocol = (url: string) => {
   return protocol;
 };
 
-const cleanUrl = (address = 'localhost', path?: string) => {
+const cleanUrl = (address = 'localhost', path?: string, onlyPath?: boolean) => {
   const cleanedPath = path?.includes('://')
     ? path?.split('://')[1].split('/')[0]
     : path?.split('/')[0];
+  if (onlyPath) address = '';
   const cleanedAddress = address?.includes('://')
     ? address?.split('://')[1]
     : address;
@@ -83,6 +84,7 @@ const cleanUrl = (address = 'localhost', path?: string) => {
   const url = cleanedPath?.includes(cleanedAddress)
     ? path || ''
     : address + junction + (path ? path : '');
+  if (onlyPath) return url.split('://')[1];
   return url;
 };
 
@@ -332,9 +334,10 @@ const request = async <Query = any, Input = Query, Output = Input>(
   minErrorCode = 500,
   maxErrorCode = 600,
   config?: AxiosRequestConfig,
-  requestAPI = RequestAPI.any
+  requestAPI = RequestAPI.any,
+  onlyPath?: boolean
 ) => {
-  let url = cleanUrl(address, path);
+  let url = cleanUrl(address, path, onlyPath);
 
   try {
     const protocol = getProtocol(url);
@@ -357,7 +360,7 @@ const request = async <Query = any, Input = Query, Output = Input>(
     const param3 = generateParam3(clearBaseURL, config);
 
     url = url.replace(protocol, '').replace(protocol.replace('s', ''), '');
-    url = protocol + url;
+    if (!onlyPath) url = protocol + url;
     url = addParamsToUrl(url, urlParams);
     // console.log('URL', url);
     // console.log('token', token);
@@ -459,7 +462,8 @@ const request = async <Query = any, Input = Query, Output = Input>(
           minErrorCode,
           maxErrorCode,
           config,
-          requestAPI
+          requestAPI,
+          onlyPath
         )) as AxiosResponse<Output>;
       },
       lastErrors,
