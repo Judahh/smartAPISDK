@@ -94,7 +94,10 @@ const setNoCache = (config: AxiosRequestConfig) => {
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   if (!config.headers) config.headers = {};
-  config.headers['Cache-Control'] = 'public, max-age=0, must-revalidate';
+  config.headers['Cache-Control'] =
+    'no-cache, no-store, public, max-age=0, must-revalidate';
+  config.headers['Expires'] = '0';
+  config.headers['Pragma'] = 'no-cache';
   // config.headers['cache-control'] = 'public, max-age=0, must-revalidate';
   config.headers['If-Modified-Since'] = yesterday.toDateString();
   config.headers['if-None-Match'] = undefined;
