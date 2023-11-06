@@ -154,9 +154,7 @@ const generateConfig = (
   }
 
   if (replaceHeaders) {
-    config = {
-      headers: replaceHeaders,
-    };
+    config.headers = { ...replaceHeaders };
   }
 
   config.headers = { ...config.headers, ...addedHeaders };
